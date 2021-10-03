@@ -1,6 +1,7 @@
 package coordinate_supplier
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"sync"
 	"sync/atomic"
@@ -133,35 +134,44 @@ func Test_Coordinate_Supplier_Desc_2x2_Repeat(t *testing.T) {
 	}
 }
 
+func Test_Coordinate_Supplier_Asc_1000x1000_Concurrent(t *testing.T) {
+	require.NoError(t, runCoordinateSupplier(1000, 1000, Asc, 10, 0))
+}
+
 func runBenchmarkCoordinateSupplier(w, h int, next NextMode, numConsumers int, maxConsumed uint64, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		// make supplier
-		var repeat bool
-		var consumed uint64
-		if maxConsumed > 0 {
-			// instead of consuming once, will repeat until maxConsumed
-			repeat = true
-		}
-		cs, err := NewCoordinateSupplier(w, h, next, repeat)
-		if err != nil {
-			b.Fatalf("failed create supplier: %s", err)
-		}
-
-		// run consumers to get all coordinates
-		wg := sync.WaitGroup{}
-		for i := 0; i < numConsumers; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for _, _, done := cs.Next(); !done && atomic.LoadUint64(&consumed) <= maxConsumed; _, _, done = cs.Next() {
-					if repeat {
-						atomic.AddUint64(&consumed, 1)
-					}
-				}
-			}()
-		}
-		wg.Wait()
+		require.NoError(b, runCoordinateSupplier(w, h, next, numConsumers, maxConsumed))
 	}
+}
+
+func runCoordinateSupplier(w, h int, next NextMode, numConsumers int, maxConsumed uint64) error {
+	// make supplier
+	var repeat bool
+	var consumed uint64
+	if maxConsumed > 0 {
+		// instead of consuming once, will repeat until maxConsumed
+		repeat = true
+	}
+	cs, err := NewCoordinateSupplier(w, h, next, repeat)
+	if err != nil {
+		return fmt.Errorf("failed create supplier: %s", err)
+	}
+
+	// run consumers to get all coordinates
+	wg := sync.WaitGroup{}
+	for i := 0; i < numConsumers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for _, _, done := cs.Next(); !done && atomic.LoadUint64(&consumed) <= maxConsumed; _, _, done = cs.Next() {
+				if repeat {
+					atomic.AddUint64(&consumed, 1)
+				}
+			}
+		}()
+	}
+	wg.Wait()
+	return nil
 }
 
 func Benchmark_3x3_1_ConsumeOnce(b *testing.B)  { runBenchmarkCoordinateSupplier(3, 3, Asc, 1, 0, b) }

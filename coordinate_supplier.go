@@ -3,7 +3,7 @@ package coordinate_supplier
 import (
 	"fmt"
 	"math/rand"
-	"sync"
+	"sync/atomic"
 )
 
 // CoordinateSupplier provides XY coordinates in a XY grid and is safe for concurrent usage
@@ -11,11 +11,9 @@ import (
 // ... repeat determines if each coordinate should be handed out once, or if iterating through should loop indefinitely
 type CoordinateSupplier struct {
 	coordinates []coordinate
-	at          int
+	at          uint64
 	repeat      bool
 	mode        NextMode
-
-	rw sync.RWMutex
 }
 
 func NewCoordinateSupplier(width, height int, mode NextMode, repeat bool) (*CoordinateSupplier, error) {
@@ -28,7 +26,6 @@ func NewCoordinateSupplier(width, height int, mode NextMode, repeat bool) (*Coor
 
 	cs := &CoordinateSupplier{
 		repeat: repeat,
-		rw:     sync.RWMutex{},
 	}
 
 	switch mode {
@@ -51,17 +48,12 @@ func NewCoordinateSupplier(width, height int, mode NextMode, repeat bool) (*Coor
 // If done is false, the returned coordinates should be used, they are valid.
 // If done is true, the returned coordinates should be discarded, there were none left to use.
 func (c *CoordinateSupplier) Next() (x, y int, done bool) {
-	c.rw.Lock()
-	defer c.rw.Unlock()
+	atNow := atomic.AddUint64(&c.at, 1) - 1
 
-	if c.at >= len(c.coordinates) {
-		if c.repeat {
-			c.at = 0
-		} else {
-			return 0, 0, true
-		}
+	if !c.repeat && atNow >= uint64(len(c.coordinates)) {
+		return 0, 0, true
 	}
 
-	defer func() { c.at++ }()
-	return c.coordinates[c.at].x, c.coordinates[c.at].y, false
+	atNowClamped := atNow % uint64(len(c.coordinates))
+	return c.coordinates[atNowClamped].x, c.coordinates[atNowClamped].y, false
 }
