@@ -12,7 +12,7 @@ func NewCoordinateSupplier(width, height int, mode NextMode, repeat bool) (*coor
 func (c *coordinateSupplier) Next() (x, y int, done bool) {
 ```
 
-##Features:
+## Features:
  - hand out each coordinate exactly once, or loop through all coordinates repeatedly
  - hand out coordinates in ascending order, descending order, or random order
  - safe for concurrent use between goroutines
