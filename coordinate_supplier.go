@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// CoordinateSupplier provides XY coordinates in a 2x2 grid and is safe for concurrent usage
+// CoordinateSupplier provides XY coordinates in a XY grid and is safe for concurrent usage
 // ... NextMode determines the order that coordinates will be handed out (Asc, Desc, Random)
 // ... repeat determines if each coordinate should be handed out once, or if iterating through should loop indefinitely
 type coordinateSupplier struct {
