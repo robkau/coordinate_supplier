@@ -9,7 +9,7 @@ import (
 // CoordinateSupplier provides XY coordinates in a XY grid and is safe for concurrent usage
 // ... NextMode determines the order that coordinates will be handed out (Asc, Desc, Random)
 // ... repeat determines if each coordinate should be handed out once, or if iterating through should loop indefinitely
-type coordinateSupplier struct {
+type CoordinateSupplier struct {
 	coordinates []coordinate
 	at          int
 	repeat      bool
@@ -18,7 +18,7 @@ type coordinateSupplier struct {
 	rw sync.RWMutex
 }
 
-func NewCoordinateSupplier(width, height int, mode NextMode, repeat bool) (*coordinateSupplier, error) {
+func NewCoordinateSupplier(width, height int, mode NextMode, repeat bool) (*CoordinateSupplier, error) {
 	if width < 1 {
 		return nil, fmt.Errorf("minimum width is 1")
 	}
@@ -26,7 +26,7 @@ func NewCoordinateSupplier(width, height int, mode NextMode, repeat bool) (*coor
 		return nil, fmt.Errorf("minimum height is 1")
 	}
 
-	cs := &coordinateSupplier{
+	cs := &CoordinateSupplier{
 		repeat: repeat,
 		rw:     sync.RWMutex{},
 	}
@@ -50,7 +50,7 @@ func NewCoordinateSupplier(width, height int, mode NextMode, repeat bool) (*coor
 // Next iterates through each pair of coordinates
 // If done is false, the returned coordinates should be used, they are valid.
 // If done is true, the returned coordinates should be discarded, there were none left to use.
-func (c *coordinateSupplier) Next() (x, y int, done bool) {
+func (c *CoordinateSupplier) Next() (x, y int, done bool) {
 	c.rw.Lock()
 	defer c.rw.Unlock()
 
