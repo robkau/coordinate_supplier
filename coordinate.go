@@ -1,17 +1,40 @@
 package coordinate_supplier
 
-type coordinate struct {
-	x int
-	y int
+import (
+	"fmt"
+	"math/rand"
+)
+
+type Coordinate struct {
+	X int
+	Y int
 }
 
-func makeAscCoordinates(width, height int) []coordinate {
-	coordinates := make([]coordinate, 0, width*height)
+// MakeCoordinateList returns a slice of Coordinate, with each item representing one cell in the XY grid.
+// The NextMode determines the ordering of the slice.
+func MakeCoordinateList(width, height int, mode NextMode) (cs []Coordinate, err error) {
+	switch mode {
+	case Asc:
+		cs = makeAscCoordinates(width, height)
+	case Random:
+		cs = makeAscCoordinates(width, height)
+		shuffleCoordinates(cs)
+	case Desc:
+		cs = makeAscCoordinates(width, height)
+		reverseCoordinates(cs)
+	default:
+		err = fmt.Errorf("unknown mode specified")
+	}
+	return
+}
+
+func makeAscCoordinates(width, height int) []Coordinate {
+	coordinates := make([]Coordinate, 0, width*height)
 	var atX, atY int
 	for {
-		coordinates = append(coordinates, coordinate{
-			x: atX,
-			y: atY,
+		coordinates = append(coordinates, Coordinate{
+			X: atX,
+			Y: atY,
 		})
 
 		atX++
@@ -26,7 +49,7 @@ func makeAscCoordinates(width, height int) []coordinate {
 	return coordinates
 }
 
-func reverseCoordinates(cs []coordinate) {
+func reverseCoordinates(cs []Coordinate) {
 	i := 0
 	j := len(cs) - 1
 	for i < j {
@@ -34,4 +57,8 @@ func reverseCoordinates(cs []coordinate) {
 		i++
 		j--
 	}
+}
+
+func shuffleCoordinates(cs []Coordinate) {
+	rand.Shuffle(len(cs), func(i, j int) { cs[i], cs[j] = cs[j], cs[i] })
 }
