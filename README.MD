@@ -11,11 +11,11 @@ func NewCoordinateSupplier(
     height int,     // height of XY grid
     mode NextMode,  // return coordinates in asc, desc, or random order
     repeat bool)    // return each coordinate once, or loop through repeatedly
-  (*coordinateSupplier, error)
+  (*CoordinateSupplier, error)
   
 
 // then iterate through the provided coordinates until done
-func (c *coordinateSupplier) Next() (x, y int, done bool) {
+func (c *CoordinateSupplier) Next() (x, y int, done bool) {
 ```  
 ----
 ## Features:
