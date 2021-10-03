@@ -36,6 +36,7 @@ func NewCoordinateSupplierAtomic(opts CoordinateSupplierOptions) (CoordinateSupp
 }
 
 func (c *coordinateSupplierAtomic) Next() (x, y int, done bool) {
+	// concurrent-safe get the next value
 	atNow := atomic.AddUint64(&c.at, 1) - 1
 
 	if !c.repeat && atNow >= uint64(len(c.coordinates)) {
@@ -43,5 +44,7 @@ func (c *coordinateSupplierAtomic) Next() (x, y int, done bool) {
 	}
 
 	atNowClamped := atNow % uint64(len(c.coordinates))
+
+	// by now no longer concurrent safe - but should usually be in order
 	return c.coordinates[atNowClamped].X, c.coordinates[atNowClamped].Y, false
 }

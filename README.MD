@@ -8,5 +8,5 @@ coordinate_supplier is a utility Go package to supply coordinates in a XY grid o
 ## Features:
  - hand out each coordinate exactly once, or loop through all coordinates repeatedly
  - hand out coordinates in ascending order, descending order, or random order
- - implementations via sync.RWMutex, atomic.AddUint64, or channel
+ - Concurrent-safe implementations via sync.RWMutex, atomic.AddUint64, or channel
 ----
