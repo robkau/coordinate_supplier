@@ -2,6 +2,8 @@ package coordinate_supplier
 
 import (
 	"github.com/stretchr/testify/require"
+	"sync"
+	"sync/atomic"
 	"testing"
 )
 
@@ -129,4 +131,125 @@ func Test_Coordinate_Supplier_Desc_2x2_Repeat(t *testing.T) {
 		require.Equal(t, xPattern[seen%len(xPattern)], x)
 		require.Equal(t, yPattern[seen%len(yPattern)], y)
 	}
+}
+
+func runBenchmarkCoordinateSupplier(w, h int, next NextMode, numConsumers int, maxConsumed uint64, b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		// make supplier
+		var repeat bool
+		var consumed uint64
+		if maxConsumed > 0 {
+			// instead of consuming once, will repeat until maxConsumed
+			repeat = true
+		}
+		cs, err := NewCoordinateSupplier(w, h, next, repeat)
+		if err != nil {
+			b.Fatalf("failed create supplier: %s", err)
+		}
+
+		// run consumers to get all coordinates
+		wg := sync.WaitGroup{}
+		for i := 0; i < numConsumers; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for _, _, done := cs.Next(); !done && atomic.LoadUint64(&consumed) <= maxConsumed; _, _, done = cs.Next() {
+					if repeat {
+						atomic.AddUint64(&consumed, 1)
+					}
+				}
+			}()
+		}
+		wg.Wait()
+	}
+}
+
+func Benchmark_3x3_1_ConsumeOnce(b *testing.B)  { runBenchmarkCoordinateSupplier(3, 3, Asc, 1, 0, b) }
+func Benchmark_3x3_3_ConsumeOnce(b *testing.B)  { runBenchmarkCoordinateSupplier(3, 3, Asc, 3, 0, b) }
+func Benchmark_3x3_30_ConsumeOnce(b *testing.B) { runBenchmarkCoordinateSupplier(3, 3, Asc, 30, 0, b) }
+func Benchmark_3x3_300_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(3, 3, Asc, 300, 0, b)
+}
+func Benchmark_3x3_3000_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(3, 3, Asc, 3000, 0, b)
+}
+
+func Benchmark_3x3_1_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(3, 3, Asc, 1, 10000000, b)
+}
+func Benchmark_3x3_3_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(3, 3, Asc, 3, 10000000, b)
+}
+func Benchmark_3x3_30_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(3, 3, Asc, 30, 10000000, b)
+}
+func Benchmark_3x3_300_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(3, 3, Asc, 300, 10000000, b)
+}
+func Benchmark_3x3_3000_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(3, 3, Asc, 3000, 10000000, b)
+}
+
+func Benchmark_21x21_1_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 1, 0, b)
+}
+func Benchmark_21x21_3_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 3, 0, b)
+}
+func Benchmark_21x21_30_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 30, 0, b)
+}
+func Benchmark_21x21_300_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 300, 0, b)
+}
+func Benchmark_21x21_3000_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 3000, 0, b)
+}
+
+func Benchmark_21x21_1_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 1, 10000000, b)
+}
+func Benchmark_21x21_3_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 3, 10000000, b)
+}
+func Benchmark_21x21_30_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 30, 10000000, b)
+}
+func Benchmark_21x21_300_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 300, 10000000, b)
+}
+func Benchmark_21x21_3000_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(21, 21, Asc, 3000, 10000000, b)
+}
+
+func Benchmark_210x210_1_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 1, 0, b)
+}
+func Benchmark_210x210_3_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 3, 0, b)
+}
+func Benchmark_210x210_30_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 30, 0, b)
+}
+func Benchmark_210x210_300_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 300, 0, b)
+}
+func Benchmark_210x210_3000_ConsumeOnce(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 3000, 0, b)
+}
+
+func Benchmark_210x210_1_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 1, 10000000, b)
+}
+func Benchmark_210x210_3_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 3, 10000000, b)
+}
+func Benchmark_210x210_30_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 30, 10000000, b)
+}
+func Benchmark_210x210_300_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 300, 10000000, b)
+}
+func Benchmark_210x210_3000_ConsumeTenMillionItems(b *testing.B) {
+	runBenchmarkCoordinateSupplier(210, 210, Asc, 3000, 10000000, b)
 }
