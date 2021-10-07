@@ -11,9 +11,9 @@ type Coordinate struct {
 }
 
 // MakeCoordinateList returns a slice of Coordinate, with each item representing one cell in the XY grid.
-// The NextMode determines the ordering of the slice.
-func MakeCoordinateList(width, height int, mode NextMode) (cs []Coordinate, err error) {
-	switch mode {
+// The Order determines the ordering of the coordinates in the slice.
+func MakeCoordinateList(width, height int, order Order) (cs []Coordinate, err error) {
+	switch order {
 	case Asc:
 		cs = makeAscCoordinates(width, height)
 	case Random:
@@ -23,7 +23,7 @@ func MakeCoordinateList(width, height int, mode NextMode) (cs []Coordinate, err 
 		cs = makeAscCoordinates(width, height)
 		reverseCoordinates(cs)
 	default:
-		err = fmt.Errorf("unknown mode specified")
+		err = fmt.Errorf("unknown order specified")
 	}
 	return
 }

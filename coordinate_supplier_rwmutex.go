@@ -9,13 +9,13 @@ type coordinateSupplierRWMutex struct {
 	coordinates []Coordinate
 	at          int
 	repeat      bool
-	mode        NextMode
+	order       Order
 
 	rw sync.RWMutex
 }
 
-// NewCoordinateSupplierAtomic returns a CoordinateSupplier synchronized with sync.RWMutex.
-// It blocks more and is slower than NewCoordinateSupplierAtomic, but the coordinates should be handed out strictly in-order when used concurrently.
+// NewCoordinateSupplierRWMutex returns a CoordinateSupplier synchronized with sync.RWMutex.
+// It blocks more and is slower than NewCoordinateSupplierAtomic, but the coordinates are guaranteed to be handed out strictly in-order when used concurrently.
 func NewCoordinateSupplierRWMutex(opts CoordinateSupplierOptions) (CoordinateSupplier, error) {
 	if opts.Width < 1 {
 		return nil, fmt.Errorf("minimum width is 1")
@@ -23,7 +23,7 @@ func NewCoordinateSupplierRWMutex(opts CoordinateSupplierOptions) (CoordinateSup
 	if opts.Height < 1 {
 		return nil, fmt.Errorf("minimum height is 1")
 	}
-	coords, err := MakeCoordinateList(opts.Width, opts.Height, opts.Mode)
+	coords, err := MakeCoordinateList(opts.Width, opts.Height, opts.Order)
 	if err != nil {
 		return nil, fmt.Errorf("failed make coordinate list: %w", err)
 	}
@@ -36,6 +36,7 @@ func NewCoordinateSupplierRWMutex(opts CoordinateSupplierOptions) (CoordinateSup
 	return cs, nil
 }
 
+// Next returns the next coordinate to be supplied.
 func (c *coordinateSupplierRWMutex) Next() (x, y int, done bool) {
 	c.rw.Lock()
 	defer c.rw.Unlock()

@@ -1,7 +1,6 @@
 package coordinate_supplier
 
 import (
-	"context"
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"sync"
@@ -36,24 +35,6 @@ func Test_Coordinate_Supplier_Asc_10x1(t *testing.T) {
 			require.Equal(t, 10, seen)
 		})
 	}
-
-	// test special CoordinateSupplierChan
-	t.Run("chan", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		cs, err := NewCoordinateSupplierChan(ctx, testOpts)
-		require.NoError(t, err)
-		seen := 0
-		last := -1
-		for coord := range cs {
-			require.Equal(t, 0, coord.Y)
-			require.Greater(t, coord.X, last)
-			last = coord.X
-			seen++
-		}
-		require.Equal(t, 10, seen)
-	})
 }
 
 func Test_Coordinate_Supplier_Asc_1x10(t *testing.T) {
@@ -75,24 +56,6 @@ func Test_Coordinate_Supplier_Asc_1x10(t *testing.T) {
 			require.Equal(t, 10, seen)
 		})
 	}
-
-	// test special CoordinateSupplierChan
-	t.Run("chan", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		cs, err := NewCoordinateSupplierChan(ctx, testOpts)
-		require.NoError(t, err)
-		seen := 0
-		last := -1
-		for coord := range cs {
-			require.Equal(t, 0, coord.X)
-			require.Greater(t, coord.Y, last)
-			last = coord.Y
-			seen++
-		}
-		require.Equal(t, 10, seen)
-	})
 }
 
 func Test_Coordinate_Supplier_Asc_2x2(t *testing.T) {
@@ -126,37 +89,6 @@ func Test_Coordinate_Supplier_Asc_2x2(t *testing.T) {
 			require.True(t, done5)
 		})
 	}
-
-	// test special CoordinateSupplierChan
-	t.Run("chan", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		cs, err := NewCoordinateSupplierChan(ctx, testOpts)
-		require.NoError(t, err)
-
-		c1, ok1 := <-cs
-		c2, ok2 := <-cs
-		c3, ok3 := <-cs
-		c4, ok4 := <-cs
-		_, ok5 := <-cs
-
-		require.Equal(t, 0, c1.X)
-		require.Equal(t, 1, c2.X)
-		require.Equal(t, 0, c3.X)
-		require.Equal(t, 1, c4.X)
-
-		require.Equal(t, 0, c1.Y)
-		require.Equal(t, 0, c2.Y)
-		require.Equal(t, 1, c3.Y)
-		require.Equal(t, 1, c4.Y)
-
-		require.True(t, ok1)
-		require.True(t, ok2)
-		require.True(t, ok3)
-		require.True(t, ok4)
-		require.False(t, ok5)
-	})
 }
 
 func Test_Coordinate_Supplier_Desc_2x2(t *testing.T) {
@@ -190,37 +122,6 @@ func Test_Coordinate_Supplier_Desc_2x2(t *testing.T) {
 			require.True(t, done5)
 		})
 	}
-
-	// test special CoordinateSupplierChan
-	t.Run("chan", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		cs, err := NewCoordinateSupplierChan(ctx, testOpts)
-		require.NoError(t, err)
-
-		c1, ok1 := <-cs
-		c2, ok2 := <-cs
-		c3, ok3 := <-cs
-		c4, ok4 := <-cs
-		_, ok5 := <-cs
-
-		require.Equal(t, 1, c1.X)
-		require.Equal(t, 0, c2.X)
-		require.Equal(t, 1, c3.X)
-		require.Equal(t, 0, c4.X)
-
-		require.Equal(t, 1, c1.Y)
-		require.Equal(t, 1, c2.Y)
-		require.Equal(t, 0, c3.Y)
-		require.Equal(t, 0, c4.Y)
-
-		require.True(t, ok1)
-		require.True(t, ok2)
-		require.True(t, ok3)
-		require.True(t, ok4)
-		require.False(t, ok5)
-	})
 }
 
 func Test_Coordinate_Supplier_Asc_3x2_Repeat(t *testing.T) {
@@ -240,20 +141,6 @@ func Test_Coordinate_Supplier_Asc_3x2_Repeat(t *testing.T) {
 			}
 		})
 	}
-
-	// test special CoordinateSupplierChan
-	t.Run("chan", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		cs, err := NewCoordinateSupplierChan(ctx, testOpts)
-		require.NoError(t, err)
-		for seen := 0; seen < 1000; seen++ {
-			coord, ok := <-cs
-			require.True(t, ok)
-			require.Equal(t, xPattern[seen%len(xPattern)], coord.X)
-			require.Equal(t, yPattern[seen%len(yPattern)], coord.Y)
-		}
-	})
 }
 
 func Test_Coordinate_Supplier_Desc_3x2_Repeat(t *testing.T) {
@@ -273,20 +160,6 @@ func Test_Coordinate_Supplier_Desc_3x2_Repeat(t *testing.T) {
 			}
 		})
 	}
-
-	// test special CoordinateSupplierChan
-	t.Run("chan", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		cs, err := NewCoordinateSupplierChan(ctx, testOpts)
-		require.NoError(t, err)
-		for seen := 0; seen < 1000; seen++ {
-			coord, ok := <-cs
-			require.True(t, ok)
-			require.Equal(t, xPattern[seen%len(xPattern)], coord.X)
-			require.Equal(t, yPattern[seen%len(yPattern)], coord.Y)
-		}
-	})
 }
 
 func Test_Coordinate_Supplier_Desc_2x2_Repeat(t *testing.T) {
@@ -306,19 +179,6 @@ func Test_Coordinate_Supplier_Desc_2x2_Repeat(t *testing.T) {
 			}
 		})
 	}
-	// test special CoordinateSupplierChan
-	t.Run("chan", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		cs, err := NewCoordinateSupplierChan(ctx, testOpts)
-		require.NoError(t, err)
-		for seen := 0; seen < 1000; seen++ {
-			coord, ok := <-cs
-			require.True(t, ok)
-			require.Equal(t, xPattern[seen%len(xPattern)], coord.X)
-			require.Equal(t, yPattern[seen%len(yPattern)], coord.Y)
-		}
-	})
 }
 
 func Test_Coordinate_Supplier_Asc_1000x1000_Concurrent(t *testing.T) {
@@ -332,16 +192,18 @@ func Test_Coordinate_Supplier_Asc_1000x1000_Concurrent(t *testing.T) {
 			require.Equal(t, uint64(testOpts.Width*testOpts.Height), consumed)
 		})
 	}
+}
 
-	// test special CoordinateSupplierChan
-	t.Run("chan", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		cs, err := NewCoordinateSupplierChan(ctx, testOpts)
+func Test_Readme_Example(t *testing.T) {
+	opts := CoordinateSupplierOptions{Width: 10, Height: 10, Order: Asc, Repeat: false}
+	cs, err := NewCoordinateSupplier(opts)
+	if err != nil {
 		require.NoError(t, err)
-		consumed := runCoordinateSupplierChan(cs, 10, 0)
-		require.Equal(t, uint64(testOpts.Width*testOpts.Height), consumed)
-	})
+	}
+
+	for x, y, done := cs.Next(); !done; x, y, done = cs.Next() {
+		fmt.Println("The next coordinate is", x, y)
+	}
 }
 
 func BenchmarkCoordinateSuppliers(b *testing.B) {
@@ -381,35 +243,6 @@ func BenchmarkCoordinateSuppliers(b *testing.B) {
 							}
 						})
 					}
-					// run CoordinateSupplierChan
-					b.Run(fmt.Sprintf("chan-%dw-%dh-%dconsumers-consume%d", width, height, consumers, consume), func(b *testing.B) {
-						for i := 0; i < b.N; i++ {
-							// special case if consume == 1, then consume all coordinates once
-							// otherwise, loop through coordinates on repeat until upToConsumed
-							useConsume := consume
-							if consume == 1 {
-								useConsume = 0
-							}
-							var repeat bool
-							if useConsume > 0 {
-								// instead of consuming once, will loop until upToConsumed
-								repeat = true
-							}
-							func() {
-								ctx, cancel := context.WithCancel(context.Background())
-								defer cancel()
-								cs, err := NewCoordinateSupplierChan(ctx, CoordinateSupplierOptions{width, height, Asc, repeat})
-								require.NoError(b, err)
-
-								count := runCoordinateSupplierChan(cs, consumers, uint64(useConsume))
-								if useConsume == 0 {
-									require.Equal(b, uint64(width*height), count)
-								} else {
-									require.Equal(b, uint64(useConsume), count)
-								}
-							}()
-						}
-					})
 				}
 			}
 		}

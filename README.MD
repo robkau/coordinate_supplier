@@ -2,11 +2,24 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/robkau/coordinate_supplier.svg)](https://pkg.go.dev/github.com/robkau/coordinate_supplier)
 
-coordinate_supplier is a utility Go package to supply coordinates in a XY grid of any size.
+coordinate_supplier is a utility Go package to supply coordinates in a XY grid.
+
+```
+opts := CoordinateSupplierOptions{Width: 10, Height: 10, Order: Asc, Repeat: false}
+cs, err := NewCoordinateSupplier(opts)
+if err != nil {
+  // handle me
+}
+
+for x, y, done := cs.Next(); !done; x, y, done = cs.Next() {
+    fmt.Println("The next coordinate is", x, y)
+}
+```
+
 
 ----
 ## Features:
- - hand out each coordinate exactly once, or loop through all coordinates repeatedly
- - hand out coordinates in ascending order, descending order, or random order
- - Concurrent-safe implementations via sync.RWMutex, atomic.AddUint64, or channel
+ - Hand out each coordinate exactly once, or loop through all coordinates repeatedly
+ - Hand out coordinates in ascending order, descending order, or random order
+ - Fast and concurrent-safe implementation via atomic.AddUint64
 ----
