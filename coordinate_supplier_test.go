@@ -194,6 +194,33 @@ func Test_Coordinate_Supplier_Asc_1000x1000_Concurrent(t *testing.T) {
 	}
 }
 
+func Test_ConsumePastEnd(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{100, 100, Asc, false}
+	// test the ones behind CoordinateSupplier interface
+	for _, supplier := range suppliersToTest {
+		t.Run(supplier.name, func(t *testing.T) {
+			// consume the coordinates
+			cs, err := supplier.new(testOpts)
+			require.NoError(t, err)
+			for _, _, done := cs.Next(); !done; _, _, done = cs.Next() {
+				require.False(t, done)
+			}
+
+			// get a bunch past the end... it should still be done
+			extras := 0
+			for {
+				if extras > 1000000 {
+					break
+				}
+				extras++
+
+				_, _, done := cs.Next()
+				require.True(t, done)
+			}
+		})
+	}
+}
+
 func Test_Readme_Example(t *testing.T) {
 	opts := CoordinateSupplierOptions{Width: 10, Height: 10, Order: Asc, Repeat: false}
 	cs, err := NewCoordinateSupplier(opts)
@@ -270,31 +297,5 @@ func runCoordinateSupplier(cs CoordinateSupplier, numConsumers int, maxConsumed 
 		}()
 	}
 	wg.Wait()
-
-	return
-}
-
-func runCoordinateSupplierChan(cs <-chan Coordinate, numConsumers int, maxConsumed uint64) (consumed uint64) {
-	// run consumers to get all coordinates
-	wg := sync.WaitGroup{}
-	var requested uint64
-	for i := 0; i < numConsumers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for range cs {
-				// if on repeat, break when reach max consumed limit
-				if maxConsumed != 0 {
-					now := atomic.AddUint64(&requested, 1)
-					if now > maxConsumed {
-						return
-					}
-				}
-				atomic.AddUint64(&consumed, 1)
-			}
-		}()
-	}
-	wg.Wait()
-
 	return
 }

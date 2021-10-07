@@ -10,8 +10,7 @@ type coordinateSupplierRWMutex struct {
 	at          int
 	repeat      bool
 	order       Order
-
-	rw sync.RWMutex
+	rw          sync.RWMutex
 }
 
 // NewCoordinateSupplierRWMutex returns a CoordinateSupplier synchronized with sync.RWMutex.
