@@ -21,5 +21,6 @@ for x, y, done := cs.Next(); !done; x, y, done = cs.Next() {
 ## Features:
  - Hand out each coordinate exactly once, or loop through all coordinates repeatedly
  - Hand out coordinates in ascending order, descending order, or random order
- - Fast and concurrent-safe implementation via atomic.AddUint64
+ - Fast and mostly concurrent-safe (no data races) implementation via atomic.AddUint64 
+ - Strictly concurrent-safe (guaranteed in order) implementation via sync.RWMutex
 ----
