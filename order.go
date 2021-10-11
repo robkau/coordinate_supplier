@@ -24,3 +24,16 @@ const (
 	Desc
 	Random
 )
+
+func OrderToString(o Order) string {
+	switch o {
+	case Asc:
+		return "Asc"
+	case Desc:
+		return "Desc"
+	case Random:
+		return "Random"
+	default:
+		return ""
+	}
+}

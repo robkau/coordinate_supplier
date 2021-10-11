@@ -57,6 +57,6 @@ func (c *coordinateSupplierAtomic) Next() (x, y int, done bool) {
 	// if repeating past the end, clamp to the current remainder position
 	atNowClamped := atNow % uint64(len(c.coordinates))
 
-	// return matching coordinate (by now may be slightly out-of-order)
+	// return matching coordinate (by now the timing may be slightly out-of-order)
 	return c.coordinates[atNowClamped].X, c.coordinates[atNowClamped].Y, false
 }
