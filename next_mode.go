@@ -23,4 +23,6 @@ const (
 	Asc Order = iota
 	Desc
 	Random
+	//RandomFair
+	//RandomUnfair
 )

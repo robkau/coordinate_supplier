@@ -22,7 +22,7 @@ func NewCoordinateSupplierRWMutex(opts CoordinateSupplierOptions) (CoordinateSup
 	if opts.Height < 1 {
 		return nil, fmt.Errorf("minimum height is 1")
 	}
-	coords, err := MakeCoordinateList(opts.Width, opts.Height, opts.Order)
+	coords, err := MakeCoordinateList(opts.Width, opts.Height, opts.Depth, opts.Order)
 	if err != nil {
 		return nil, fmt.Errorf("failed make coordinate list: %w", err)
 	}
@@ -36,7 +36,7 @@ func NewCoordinateSupplierRWMutex(opts CoordinateSupplierOptions) (CoordinateSup
 }
 
 // Next returns the next coordinate to be supplied.
-func (c *coordinateSupplierRWMutex) Next() (x, y int, done bool) {
+func (c *coordinateSupplierRWMutex) Next() (x, y, z int, done bool) {
 	c.rw.Lock()
 	defer c.rw.Unlock()
 
@@ -44,10 +44,10 @@ func (c *coordinateSupplierRWMutex) Next() (x, y int, done bool) {
 		if c.repeat {
 			c.at = 0
 		} else {
-			return 0, 0, true
+			return 0, 0, 0, true
 		}
 	}
 
 	defer func() { c.at++ }()
-	return c.coordinates[c.at].X, c.coordinates[c.at].Y, false
+	return c.coordinates[c.at].X, c.coordinates[c.at].Y, c.coordinates[c.at].Z, false
 }

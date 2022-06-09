@@ -16,8 +16,8 @@ var suppliersToTest = []struct {
 	{"rw", NewCoordinateSupplierRWMutex},
 }
 
-func Test_Coordinate_Supplier_Asc_10x1(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{10, 1, Asc, false}
+func Test_Coordinate_Supplier_Asc_10x1x1(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{10, 1, 1, Asc, false}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
@@ -26,8 +26,9 @@ func Test_Coordinate_Supplier_Asc_10x1(t *testing.T) {
 
 			seen := 0
 			last := -1
-			for x, y, done := cs.Next(); !done; x, y, done = cs.Next() {
+			for x, y, z, done := cs.Next(); !done; x, y, z, done = cs.Next() {
 				require.Equal(t, 0, y)
+				require.Equal(t, 0, z)
 				require.Greater(t, x, last)
 				last = x
 				seen++
@@ -37,8 +38,8 @@ func Test_Coordinate_Supplier_Asc_10x1(t *testing.T) {
 	}
 }
 
-func Test_Coordinate_Supplier_Asc_1x10(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{1, 10, Asc, false}
+func Test_Coordinate_Supplier_Asc_1x10x1(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{1, 10, 1, Asc, false}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
@@ -47,8 +48,9 @@ func Test_Coordinate_Supplier_Asc_1x10(t *testing.T) {
 
 			seen := 0
 			last := -1
-			for x, y, done := cs.Next(); !done; x, y, done = cs.Next() {
+			for x, y, z, done := cs.Next(); !done; x, y, z, done = cs.Next() {
 				require.Equal(t, 0, x)
+				require.Equal(t, 0, z)
 				require.Greater(t, y, last)
 				last = y
 				seen++
@@ -58,131 +60,209 @@ func Test_Coordinate_Supplier_Asc_1x10(t *testing.T) {
 	}
 }
 
-func Test_Coordinate_Supplier_Asc_2x2(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{2, 2, Asc, false}
+func Test_Coordinate_Supplier_Asc_1x1x10x(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{1, 1, 10, Asc, false}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
 			cs, err := supplier.new(testOpts)
 			require.NoError(t, err)
 
-			x1, y1, done1 := cs.Next()
-			x2, y2, done2 := cs.Next()
-			x3, y3, done3 := cs.Next()
-			x4, y4, done4 := cs.Next()
-			_, _, done5 := cs.Next()
+			seen := 0
+			last := -1
+			for x, y, z, done := cs.Next(); !done; x, y, z, done = cs.Next() {
+				require.Equal(t, 0, x)
+				require.Equal(t, 0, y)
+				require.Greater(t, z, last)
+				last = y
+				seen++
+			}
+			require.Equal(t, 10, seen)
+		})
+	}
+}
+
+func Test_Coordinate_Supplier_Asc_2x2x2(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{2, 2, 2, Asc, false}
+	// test the ones behind CoordinateSupplier interface
+	for _, supplier := range suppliersToTest {
+		t.Run(supplier.name, func(t *testing.T) {
+			cs, err := supplier.new(testOpts)
+			require.NoError(t, err)
+
+			x1, y1, z1, done1 := cs.Next()
+			x2, y2, z2, done2 := cs.Next()
+			x3, y3, z3, done3 := cs.Next()
+			x4, y4, z4, done4 := cs.Next()
+			x5, y5, z5, done5 := cs.Next()
+			x6, y6, z6, done6 := cs.Next()
+			x7, y7, z7, done7 := cs.Next()
+			x8, y8, z8, done8 := cs.Next()
+			_, _, _, done9 := cs.Next()
 
 			require.Equal(t, 0, x1)
 			require.Equal(t, 1, x2)
 			require.Equal(t, 0, x3)
 			require.Equal(t, 1, x4)
+			require.Equal(t, 0, x5)
+			require.Equal(t, 1, x6)
+			require.Equal(t, 0, x7)
+			require.Equal(t, 1, x8)
 
 			require.Equal(t, 0, y1)
 			require.Equal(t, 0, y2)
 			require.Equal(t, 1, y3)
 			require.Equal(t, 1, y4)
+			require.Equal(t, 0, y5)
+			require.Equal(t, 0, y6)
+			require.Equal(t, 1, y7)
+			require.Equal(t, 1, y8)
+
+			require.Equal(t, 0, z1)
+			require.Equal(t, 0, z2)
+			require.Equal(t, 0, z3)
+			require.Equal(t, 0, z4)
+			require.Equal(t, 1, z5)
+			require.Equal(t, 1, z6)
+			require.Equal(t, 1, z7)
+			require.Equal(t, 1, z8)
 
 			require.False(t, done1)
 			require.False(t, done2)
 			require.False(t, done3)
 			require.False(t, done4)
-			require.True(t, done5)
+			require.False(t, done5)
+			require.False(t, done6)
+			require.False(t, done7)
+			require.False(t, done8)
+			require.True(t, done9)
 		})
 	}
 }
 
-func Test_Coordinate_Supplier_Desc_2x2(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{2, 2, Desc, false}
+func Test_Coordinate_Supplier_Desc_2x2x2(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{2, 2, 2, Desc, false}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
 			cs, err := supplier.new(testOpts)
 			require.NoError(t, err)
 
-			x1, y1, done1 := cs.Next()
-			x2, y2, done2 := cs.Next()
-			x3, y3, done3 := cs.Next()
-			x4, y4, done4 := cs.Next()
-			_, _, done5 := cs.Next()
+			x1, y1, z1, done1 := cs.Next()
+			x2, y2, z2, done2 := cs.Next()
+			x3, y3, z3, done3 := cs.Next()
+			x4, y4, z4, done4 := cs.Next()
+			x5, y5, z5, done5 := cs.Next()
+			x6, y6, z6, done6 := cs.Next()
+			x7, y7, z7, done7 := cs.Next()
+			x8, y8, z8, done8 := cs.Next()
+			_, _, _, done9 := cs.Next()
 
 			require.Equal(t, 1, x1)
 			require.Equal(t, 0, x2)
 			require.Equal(t, 1, x3)
 			require.Equal(t, 0, x4)
+			require.Equal(t, 1, x5)
+			require.Equal(t, 0, x6)
+			require.Equal(t, 1, x7)
+			require.Equal(t, 0, x8)
 
 			require.Equal(t, 1, y1)
 			require.Equal(t, 1, y2)
 			require.Equal(t, 0, y3)
 			require.Equal(t, 0, y4)
+			require.Equal(t, 1, y5)
+			require.Equal(t, 1, y6)
+			require.Equal(t, 0, y7)
+			require.Equal(t, 0, y8)
+
+			require.Equal(t, 1, z1)
+			require.Equal(t, 1, z2)
+			require.Equal(t, 1, z3)
+			require.Equal(t, 1, z4)
+			require.Equal(t, 0, z5)
+			require.Equal(t, 0, z6)
+			require.Equal(t, 0, z7)
+			require.Equal(t, 0, z8)
 
 			require.False(t, done1)
 			require.False(t, done2)
 			require.False(t, done3)
 			require.False(t, done4)
-			require.True(t, done5)
+			require.False(t, done5)
+			require.False(t, done6)
+			require.False(t, done7)
+			require.False(t, done8)
+			require.True(t, done9)
 		})
 	}
 }
 
-func Test_Coordinate_Supplier_Asc_3x2_Repeat(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{3, 2, Asc, true}
+func Test_Coordinate_Supplier_Asc_3x2x1_Repeat(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{3, 2, 1, Asc, true}
 	xPattern := []int{0, 1, 2, 0, 1, 2}
 	yPattern := []int{0, 0, 0, 1, 1, 1}
+	zPattern := []int{0, 0, 0, 0, 0, 0}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
 			cs, err := supplier.new(testOpts)
 			require.NoError(t, err)
 			for seen := 0; seen < 1000; seen++ {
-				x, y, done := cs.Next()
+				x, y, z, done := cs.Next()
 				require.False(t, done)
 				require.Equal(t, xPattern[seen%len(xPattern)], x)
 				require.Equal(t, yPattern[seen%len(yPattern)], y)
+				require.Equal(t, zPattern[seen%len(zPattern)], z)
 			}
 		})
 	}
 }
 
-func Test_Coordinate_Supplier_Desc_3x2_Repeat(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{3, 2, Desc, true}
+func Test_Coordinate_Supplier_Desc_3x2x1_Repeat(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{3, 2, 1, Desc, true}
 	xPattern := []int{2, 1, 0, 2, 1, 0}
 	yPattern := []int{1, 1, 1, 0, 0, 0}
+	zPattern := []int{0, 0, 0, 0, 0, 0}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
 			cs, err := supplier.new(testOpts)
 			require.NoError(t, err)
 			for seen := 0; seen < 1000; seen++ {
-				x, y, done := cs.Next()
+				x, y, z, done := cs.Next()
 				require.False(t, done)
 				require.Equal(t, xPattern[seen%len(xPattern)], x)
 				require.Equal(t, yPattern[seen%len(yPattern)], y)
+				require.Equal(t, zPattern[seen%len(zPattern)], z)
 			}
 		})
 	}
 }
 
-func Test_Coordinate_Supplier_Desc_2x2_Repeat(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{2, 2, Desc, true}
-	xPattern := []int{1, 0, 1, 0}
-	yPattern := []int{1, 1, 0, 0}
+func Test_Coordinate_Supplier_Desc_2x2x2_Repeat(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{2, 2, 2, Desc, true}
+	xPattern := []int{1, 0, 1, 0, 1, 0, 1, 0}
+	yPattern := []int{1, 1, 0, 0, 1, 1, 0, 0}
+	zPattern := []int{1, 1, 1, 1, 0, 0, 0, 0}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
 			cs, err := supplier.new(testOpts)
 			require.NoError(t, err)
 			for seen := 0; seen < 1000; seen++ {
-				x, y, done := cs.Next()
+				x, y, z, done := cs.Next()
 				require.False(t, done)
 				require.Equal(t, xPattern[seen%len(xPattern)], x)
 				require.Equal(t, yPattern[seen%len(yPattern)], y)
+				require.Equal(t, zPattern[seen%len(zPattern)], z)
 			}
 		})
 	}
 }
 
-func Test_Coordinate_Supplier_Asc_1000x1000_Concurrent(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{1000, 1000, Asc, false}
+func Test_Coordinate_Supplier_Asc_1000x1000x1_Concurrent(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{1000, 1000, 1, Asc, false}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
@@ -195,14 +275,14 @@ func Test_Coordinate_Supplier_Asc_1000x1000_Concurrent(t *testing.T) {
 }
 
 func Test_ConsumePastEnd(t *testing.T) {
-	testOpts := CoordinateSupplierOptions{100, 100, Asc, false}
+	testOpts := CoordinateSupplierOptions{100, 100, 2, Asc, false}
 	// test the ones behind CoordinateSupplier interface
 	for _, supplier := range suppliersToTest {
 		t.Run(supplier.name, func(t *testing.T) {
 			// consume the coordinates
 			cs, err := supplier.new(testOpts)
 			require.NoError(t, err)
-			for _, _, done := cs.Next(); !done; _, _, done = cs.Next() {
+			for _, _, _, done := cs.Next(); !done; _, _, _, done = cs.Next() {
 				require.False(t, done)
 			}
 
@@ -214,7 +294,7 @@ func Test_ConsumePastEnd(t *testing.T) {
 				}
 				extras++
 
-				_, _, done := cs.Next()
+				_, _, _, done := cs.Next()
 				require.True(t, done)
 			}
 		})
@@ -222,20 +302,21 @@ func Test_ConsumePastEnd(t *testing.T) {
 }
 
 func Test_Readme_Example(t *testing.T) {
-	opts := CoordinateSupplierOptions{Width: 10, Height: 10, Order: Asc, Repeat: false}
+	opts := CoordinateSupplierOptions{Width: 10, Height: 10, Depth: 1, Order: Asc, Repeat: false}
 	cs, err := NewCoordinateSupplier(opts)
 	if err != nil {
 		require.NoError(t, err)
 	}
 
-	for x, y, done := cs.Next(); !done; x, y, done = cs.Next() {
-		fmt.Println("The next coordinate is", x, y)
+	for x, y, z, done := cs.Next(); !done; x, y, z, done = cs.Next() {
+		fmt.Println("The next coordinate is", x, y, z)
 	}
 }
 
 func BenchmarkCoordinateSuppliers(b *testing.B) {
 	upToWidth := 1000
 	upToHeight := 1000
+	depth := 5
 	upToConsumers := 1000
 	upToConsumed := 1000000
 
@@ -258,7 +339,7 @@ func BenchmarkCoordinateSuppliers(b *testing.B) {
 									// instead of consuming once, will loop until upToConsumed
 									repeat = true
 								}
-								cs, err := supplier.new(CoordinateSupplierOptions{width, height, Asc, repeat})
+								cs, err := supplier.new(CoordinateSupplierOptions{width, height, depth, Asc, repeat})
 								require.NoError(b, err)
 
 								count := runCoordinateSupplier(cs, consumers, uint64(useConsume))
@@ -284,7 +365,7 @@ func runCoordinateSupplier(cs CoordinateSupplier, numConsumers int, maxConsumed 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for _, _, done := cs.Next(); !done; _, _, done = cs.Next() {
+			for _, _, _, done := cs.Next(); !done; _, _, _, done = cs.Next() {
 				// if on repeat, break when reach max consumed limit
 				if maxConsumed != 0 {
 					now := atomic.AddUint64(&requested, 1)

@@ -22,7 +22,10 @@ func NewCoordinateSupplierAtomic(opts CoordinateSupplierOptions) (CoordinateSupp
 	if opts.Height < 1 {
 		return nil, fmt.Errorf("minimum height is 1")
 	}
-	coords, err := MakeCoordinateList(opts.Width, opts.Height, opts.Order)
+	if opts.Depth < 1 {
+		return nil, fmt.Errorf("minimum depth is 1")
+	}
+	coords, err := MakeCoordinateList(opts.Width, opts.Height, opts.Depth, opts.Order)
 	if err != nil {
 		return nil, fmt.Errorf("failed make coordinate list: %w", err)
 	}
@@ -37,11 +40,11 @@ func NewCoordinateSupplierAtomic(opts CoordinateSupplierOptions) (CoordinateSupp
 
 // Next returns the next coordinate to be supplied.
 // It may be possible to receive some coordinates slightly out of order when called concurrently.
-func (c *coordinateSupplierAtomic) Next() (x, y int, done bool) {
+func (c *coordinateSupplierAtomic) Next() (x, y, z int, done bool) {
 	// check if already done
 	if atomic.LoadUint64(&c.done) > 0 {
 		// already done
-		return 0, 0, true
+		return 0, 0, 0, true
 	}
 
 	// concurrent-safe and in-order get the next element index
@@ -51,12 +54,12 @@ func (c *coordinateSupplierAtomic) Next() (x, y int, done bool) {
 	if !c.repeat && atNow >= uint64(len(c.coordinates)) {
 		// mark as done
 		atomic.AddUint64(&c.done, 1)
-		return 0, 0, true
+		return 0, 0, 0, true
 	}
 
 	// if repeating past the end, clamp to the current remainder position
 	atNowClamped := atNow % uint64(len(c.coordinates))
 
 	// return matching coordinate (by now may be slightly out-of-order)
-	return c.coordinates[atNowClamped].X, c.coordinates[atNowClamped].Y, false
+	return c.coordinates[atNowClamped].X, c.coordinates[atNowClamped].Y, c.coordinates[atNowClamped].Z, false
 }

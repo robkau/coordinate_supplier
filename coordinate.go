@@ -8,19 +8,20 @@ import (
 type Coordinate struct {
 	X int
 	Y int
+	Z int
 }
 
 // MakeCoordinateList returns a slice of Coordinate, with each item representing one cell in the XY grid.
 // The Order determines the ordering of the coordinates in the slice.
-func MakeCoordinateList(width, height int, order Order) (cs []Coordinate, err error) {
+func MakeCoordinateList(width, height, depth int, order Order) (cs []Coordinate, err error) {
 	switch order {
 	case Asc:
-		cs = makeAscCoordinates(width, height)
+		cs = makeAscCoordinates(width, height, depth)
 	case Random:
-		cs = makeAscCoordinates(width, height)
+		cs = makeAscCoordinates(width, height, depth)
 		shuffleCoordinates(cs)
 	case Desc:
-		cs = makeAscCoordinates(width, height)
+		cs = makeAscCoordinates(width, height, depth)
 		reverseCoordinates(cs)
 	default:
 		err = fmt.Errorf("unknown order specified")
@@ -28,13 +29,14 @@ func MakeCoordinateList(width, height int, order Order) (cs []Coordinate, err er
 	return
 }
 
-func makeAscCoordinates(width, height int) []Coordinate {
-	coordinates := make([]Coordinate, 0, width*height)
-	var atX, atY int
+func makeAscCoordinates(width, height, depth int) []Coordinate {
+	coordinates := make([]Coordinate, 0, width*height*depth)
+	var atX, atY, atZ int
 	for {
 		coordinates = append(coordinates, Coordinate{
 			X: atX,
 			Y: atY,
+			Z: atZ,
 		})
 
 		atX++
@@ -43,6 +45,10 @@ func makeAscCoordinates(width, height int) []Coordinate {
 			atY++
 		}
 		if atY >= height {
+			atY = 0
+			atZ++
+		}
+		if atZ >= depth {
 			break
 		}
 	}
