@@ -2,15 +2,21 @@ package coordinate_supplier
 
 import (
 	"fmt"
+	"math/rand"
 	"sync/atomic"
 )
 
 type coordinateSupplierAtomic struct {
-	coordinates []Coordinate
-	at          uint64
-	done        uint64
-	repeat      bool
-	order       Order
+	at      uint64
+	width   uint64
+	height  uint64
+	depth   uint64
+	size    uint64
+	coprime uint64
+	offset  uint64
+	done    uint64
+	repeat  bool
+	order   Order
 }
 
 // NewCoordinateSupplierAtomic returns a CoordinateSupplier synchronized with atomic.AddUint64.
@@ -25,41 +31,82 @@ func NewCoordinateSupplierAtomic(opts CoordinateSupplierOptions) (CoordinateSupp
 	if opts.Depth < 1 {
 		return nil, fmt.Errorf("minimum depth is 1")
 	}
-	coords, err := MakeCoordinateList(opts.Width, opts.Height, opts.Depth, opts.Order)
-	if err != nil {
-		return nil, fmt.Errorf("failed make coordinate list: %w", err)
-	}
 
+	size := opts.Width * opts.Height * opts.Depth
 	cs := &coordinateSupplierAtomic{
-		repeat:      opts.Repeat,
-		coordinates: coords,
+		repeat:  opts.Repeat,
+		order:   opts.Order,
+		width:   uint64(opts.Width),
+		height:  uint64(opts.Height),
+		depth:   uint64(opts.Depth),
+		size:    uint64(size),
+		coprime: selectCoprime(size/2, size),
+		offset:  uint64(rand.Intn(size)),
 	}
 
 	return cs, nil
 }
 
+func selectCoprime(min, target int) uint64 {
+	maxCount := 100000
+	count := 0
+	selected := 0
+
+	for val := min; val < target; val++ {
+		if coprime(val, target) {
+			count += 1
+			if count == 1 || rand.Intn(count) < 1 {
+				selected = val
+			}
+		}
+		if count == maxCount {
+			return uint64(val)
+		}
+	}
+	return uint64(selected)
+}
+
+func coprime(a, b int) bool {
+	return gcd(a, b) == 1
+}
+
+func gcd(a, b int) int {
+	if b != 0 {
+		return gcd(b, a%b)
+	}
+	return a
+}
+
 // Next returns the next coordinate to be supplied.
 // It may be possible to receive some coordinates slightly out of order when called concurrently.
+// https://lemire.me/blog/2017/09/18/visiting-all-values-in-an-array-exactly-once-in-random-order/
 func (c *coordinateSupplierAtomic) Next() (x, y, z int, done bool) {
-	// check if already done
+
 	if atomic.LoadUint64(&c.done) > 0 {
 		// already done
 		return 0, 0, 0, true
 	}
 
-	// concurrent-safe and in-order get the next element index
+	// concurrent-safe and in-order get the next index
 	atNow := atomic.AddUint64(&c.at, 1) - 1
 
 	// check if now done
-	if !c.repeat && atNow >= uint64(len(c.coordinates)) {
-		// mark as done
-		atomic.AddUint64(&c.done, 1)
-		return 0, 0, 0, true
+	if atNow >= c.size {
+		if !c.repeat {
+			// mark as done
+			atomic.AddUint64(&c.done, 1)
+			return 0, 0, 0, true
+		}
+		// keep repeating
+		atNow = atNow % c.size
 	}
 
-	// if repeating past the end, clamp to the current remainder position
-	atNowClamped := atNow % uint64(len(c.coordinates))
+	switch c.order {
+	case Desc:
+		atNow = c.size - atNow - 1
+	case Random:
+		atNow = (atNow*c.coprime + c.offset) % c.size
+	}
 
-	// return matching coordinate (by now may be slightly out-of-order)
-	return c.coordinates[atNowClamped].X, c.coordinates[atNowClamped].Y, c.coordinates[atNowClamped].Z, false
+	return int(atNow % c.width), int((atNow / c.width) % c.height), int(atNow / (c.width * c.height)), false
 }

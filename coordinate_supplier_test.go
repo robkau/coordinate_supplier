@@ -13,7 +13,7 @@ var suppliersToTest = []struct {
 	new  func(options CoordinateSupplierOptions) (CoordinateSupplier, error)
 }{
 	{"atomic", NewCoordinateSupplierAtomic},
-	{"rw", NewCoordinateSupplierRWMutex},
+	//{"rw", NewCoordinateSupplierRWMutex},
 }
 
 func Test_Coordinate_Supplier_Asc_10x1x1(t *testing.T) {
@@ -240,6 +240,30 @@ func Test_Coordinate_Supplier_Desc_3x2x1_Repeat(t *testing.T) {
 	}
 }
 
+func Test_Coordinate_Supplier_Asc_3x3x3_Random(t *testing.T) {
+	testOpts := CoordinateSupplierOptions{3, 3, 3, Random, false}
+	// test the ones behind CoordinateSupplier interface
+	for _, supplier := range suppliersToTest {
+		t.Run(supplier.name, func(t *testing.T) {
+			cs, err := supplier.new(testOpts)
+			require.NoError(t, err)
+			type xyz struct {
+				x int
+				y int
+				z int
+			}
+			seen := map[xyz]bool{}
+			for x, y, z, done := cs.Next(); !done; x, y, z, done = cs.Next() {
+				seen[xyz{x, y, z}] = true
+				require.True(t, x >= 0 && x <= 2)
+				require.True(t, y >= 0 && y <= 2)
+				require.True(t, z >= 0 && z <= 2)
+			}
+			require.Len(t, seen, 27)
+		})
+	}
+}
+
 func Test_Coordinate_Supplier_Desc_2x2x2_Repeat(t *testing.T) {
 	testOpts := CoordinateSupplierOptions{2, 2, 2, Desc, true}
 	xPattern := []int{1, 0, 1, 0, 1, 0, 1, 0}
@@ -326,7 +350,7 @@ func BenchmarkCoordinateSuppliers(b *testing.B) {
 				for consumers := 1; consumers <= upToConsumers; consumers *= 10 {
 					// run CoordinateSuppliers
 					for _, supplier := range suppliersToTest {
-						b.Run(fmt.Sprintf("%s-%dw-%dh-%dconsumers-consume%d", supplier.name, width, height, consumers, consume), func(b *testing.B) {
+						b.Run(fmt.Sprintf("%s-%dw-%dh-%dd-%dconsumers-consume%d", supplier.name, width, height, depth, consumers, consume), func(b *testing.B) {
 							for i := 0; i < b.N; i++ {
 								// special case if consume == 1, then consume all coordinates once
 								// otherwise, loop through coordinates on repeat until upToConsumed
@@ -344,7 +368,7 @@ func BenchmarkCoordinateSuppliers(b *testing.B) {
 
 								count := runCoordinateSupplier(cs, consumers, uint64(useConsume))
 								if useConsume == 0 {
-									require.Equal(b, uint64(width*height), count)
+									require.Equal(b, uint64(width*height*depth), count)
 								} else {
 									require.Equal(b, uint64(useConsume), count)
 								}
